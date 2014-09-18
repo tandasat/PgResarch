@@ -119,7 +119,7 @@ Simply put, DisPG patches some functions that are used by PatchGuard. These func
 1. KiCommitThreadWait() and KiAttemptFastRemovePriQueue()
 1. KeDelayExecutionThread() and KeWaitForSingleObject()
 1. Pg_IndependentContextWorkItemRoutine() (at HalPerformEndOfInterrupt() - 0x4c)
-:
+
 In order to understand why they are targeted, I shortly explain how PatchGuard context runs. Here is the states of PatchGuard contexts (assume that an initial state is state 1, although it can be any of these):
 
 1. **Waiting** for being executed (the context resides in one of timer mechanisms)
