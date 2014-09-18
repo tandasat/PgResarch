@@ -127,7 +127,7 @@ In order to understand why they are targeted, I shortly explain how PatchGuard c
 1. **Waiting** for being dequeued from a work item queue
 1. Running PASSIVE\_LEVEL operations including the very beginning of the second validation routine, FsRtlMdlReadCompleteDevEx(), that may call following sleep functions.
 1. **May be Waiting** some time in either KeDelayExecutionThread() or KeWaitForSingleObject() if they were called.
-1. Running PASSIVE___LEVEL operations including exercising the second validation and en-queueing a next PatchGuard context into one of timer mechanisms (go to state 1)
+1. Running PASSIVE\_LEVEL operations including exercising the second validation and en-queueing a next PatchGuard context into one of timer mechanisms (go to state 1)
 
 Now let's get back to patched functions.
 
