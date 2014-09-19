@@ -34,7 +34,7 @@ Installation
             The entry was successfully copied to {xxxx}.
             > bcdedit /set {xxxx} TESTSIGNING ON
 
-1. Copy the bin folder to this test box (a location should not matter).
+1. Copy the \x64\Release folder to the test box (a location should not matter).
 1. Shutdown Windows.
 1. (Optional) Take a snapshot if you are using a VM.
 
