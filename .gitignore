@@ -1,0 +1,11 @@
+*.opensdf
+*.sdf
+*.pdb
+*.suo
+*.exp
+*.lib
+*Debug*
+DisPG/DisPG/x64/
+DisPG/DisPGLoader/x64/
+109/109/x64/
+109/109/Release/
