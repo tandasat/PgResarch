@@ -1,7 +1,7 @@
 109
 ==========================
 
-This is an WinDbg extension designed to help researchers analyze PatchGuard. It allows researchers to derive information of PatchGuard from bugcheck [CRITICAL_STRUCTURE_CORRUPTION (109)](http://msdn.microsoft.com/en-ca/library/windows/hardware/ff557228(v=vs.85).aspx) and a specified address. For more information, see sample_output.txt and use !help command on WinDbg.
+This is an WinDbg extension designed to help researchers analyze PatchGuard. It allows researchers to derive information of PatchGuard from bugcheck [CRITICAL_STRUCTURE_CORRUPTION (109)](http://msdn.microsoft.com/en-ca/library/windows/hardware/ff557228(v=vs.85).aspx) and a specified address. For more information, see [sample_output.txt](sample_output.txt) and use !help command on WinDbg.
 
 Installation
 ---------------
