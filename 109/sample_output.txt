@@ -1,0 +1,95 @@
+Microsoft (R) Windows Debugger Version 6.3.9600.16384 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+
+Loading Dump File [C:\Desktop\MEMORY.DMP]
+Kernel Bitmap Dump File: Only kernel address space is available
+
+
+************* Symbol Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*c:\Symbols*http://msdl.microsoft.com/download/symbols
+Symbol search path is: srv*c:\Symbols*http://msdl.microsoft.com/download/symbols
+Executable search path is: 
+Windows 8 Kernel Version 9600 MP (2 procs) Free x64
+Product: WinNt, suite: TerminalServer SingleUserTS
+Built by: 9600.16452.amd64fre.winblue_gdr.131030-1505
+Machine Name:
+Kernel base = 0xfffff801`a9874000 PsLoadedModuleList = 0xfffff801`a9b38990
+Debug session time: Sun Mar 30 14:52:46.195 2014 (UTC - 7:00)
+System Uptime: 0 days 0:06:15.252
+Loading Kernel Symbols
+...............................................................
+................................................................
+........................
+Loading User Symbols
+
+Loading unloaded module list
+.........
+*******************************************************************************
+*                                                                             *
+*                        Bugcheck Analysis                                    *
+*                                                                             *
+*******************************************************************************
+
+Use !analyze -v to get detailed debugging information.
+
+BugCheck 109, {a3a00f58b35b15a6, b3b71bdf05d85989, fffff801a9c233e0, 1}
+
+Probably caused by : BPCOUNT_NONZERO ( BPCOUNT_NONZERO )
+
+Followup: MachineOwner
+---------
+
+0: kd> .load 109
+Use !analyzepg to get detailed PatchGuard Bugcheck information.
+Use !dumppg <address> to display PatchGuard information located at the specific address.
+0: kd> !analyzepg
+
+*******************************************************************************
+*                                                                             *
+*                        PatchGuard Bugcheck Analysis                         *
+*                                                                             *
+*******************************************************************************
+
+CRITICAL_STRUCTURE_CORRUPTION (109)
+
+    PatchGuard Context      : ffffd000`219260be, An address of PatchGuard context
+    Validation Data         : ffffd000`21932574, An address of validation data that caused the error
+    Type of Corruption      : Available 1   : 1 : Modification of a function or.pdata
+    Failure type dependent information      : nt!NtQuerySystemInformation (fffff801`a9c233e0)
+    Allocated memory base                   : ffffd000`21926008
+    Pg_SelfValidation                       : ffffd000`219314bc
+    FsRtlUninitializeSmallMcb               : ffffd000`21931d04
+    FsRtlMdlReadCompleteDevEx               : ffffd000`21927d04
+    Pg_EncryptWaitAndDecrypt                : nt!KiScbQueueScanWorker+0x14 (fffff801`a99ba548)
+    OnTheFlyEncryption                      : 00000084
+    ContextSize                             : 77e7b2d8
+    shouldMmAllocateIndependentPagesBeUsed  : 00000001
+    schedulerType                           : 00000000`00000001
+    DPC Routine                             : nt!IopTimerDispatch (fffff801`a9981824)
+    WorkerRoutine                           : nt!KiScbQueueScanWorker (fffff801`a99ba534)
+    shouldKeWaitForSingleObjectBeUsed       : ffffe000`0013b5c5
+    shouldKiScbQueueWorkerBeUsed            : ffffe000`0013a5c3
+    shouldPg_EncryptWaitAndDecryptBeUsed    : 00000000`00000000
+
+Use:
+    dps ffffd000219260be+c8 to display the structure of PatchGuard
+
+0: kd> dps ffffd000219260be+c8
+ffffd000`21926186  fffff801`a98e7d10 nt!ExAcquireResourceSharedLite
+ffffd000`2192618e  fffff801`a98e7a00 nt!ExAcquireResourceExclusiveLite
+ffffd000`21926196  fffff801`a9b04010 nt!ExAllocatePoolWithTag
+ffffd000`2192619e  fffff801`a9b04000 nt!ExFreePool
+ffffd000`219261a6  fffff801`a9c22d60 nt!ExMapHandleToPointer
+ffffd000`219261ae  fffff801`a9926ce0 nt!ExQueueWorkItem
+ffffd000`219261b6  fffff801`a98e8230 nt!ExReleaseResourceLite
+ffffd000`219261be  fffff801`a9d53e5c nt!ExUnlockHandleTableEntry
+ffffd000`219261c6  fffff801`a98b7380 nt!ExfAcquirePushLockExclusive
+ffffd000`219261ce  fffff801`a990a6dc nt!ExfReleasePushLockExclusive
+ffffd000`219261d6  fffff801`a9912880 nt!ExfAcquirePushLockShared
+ffffd000`219261de  fffff801`a98ac164 nt!ExfReleasePushLockShared
+ffffd000`219261e6  fffff801`a98adbb0 nt!KeAcquireInStackQueuedSpinLockAtDpcLevel
+ffffd000`219261ee  fffff801`a996b944 nt!ExAcquireSpinLockSharedAtDpcLevel
+ffffd000`219261f6  fffff801`a99c1ca0 nt!KeBugCheckEx
+ffffd000`219261fe  fffff801`a99231a0 nt!KeDelayExecutionThread
