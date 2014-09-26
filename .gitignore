@@ -4,7 +4,9 @@
 *.suo
 *.exp
 *.lib
+*.user
 *Debug*
+*ipch*
 DisPG/DisPG/x64/
 DisPG/DisPGLoader/x64/
 109/109/x64/

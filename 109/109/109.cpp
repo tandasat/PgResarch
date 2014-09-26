@@ -47,12 +47,16 @@ private:
     void Dump(
         __in ULONG64 PgContextAddress,
         __in_opt ULONG64 ReasonInfoAddress,
+        __in ULONG64 FailureDependentInfo,
+        __in ULONG64 TypeOfCorruption,
         __in bool NeedBugCheckBanner);
 
     template <typename PgContextType>
     void DumpInternal(
         __in ULONG64 PgContextAddress,
-        __in_opt ULONG64 ReasonInfoAddress);
+        __in_opt ULONG64 ReasonInfoAddress,
+        __in ULONG64 FailureDependentInfo,
+        __in ULONG64 TypeOfCorruption);
 
     void DumpPgContext(
         __in ULONG64 PgContextAddress,
@@ -64,12 +68,15 @@ private:
         __in_opt ULONG64 ReasonInfoAddress,
         __in const PgContext_8_1& PgContext);
 
+    void DumpForType106(
+        __in ULONG64 FailureDependentInfo);
+
     enum class TargetOsVersion
     {
-        Unsupported, 
-        WinXP, 
-        WinVista, 
-        Win7, 
+        Unsupported,
+        WinXP,
+        WinVista,
+        Win7,
         Win8_1,
     };
 
@@ -84,9 +91,9 @@ private:
 
 namespace {
 
-template <typename PgContextType>
 const char* GetTypeString(
-    __in const PgContextType& PgContext);
+    __in ULONG64 ErrorWasFound,
+    __in ULONG64 BugChkParam4Type);
 
 } // End of namespace {unnamed}
 
@@ -207,10 +214,10 @@ EXT_COMMAND(analyzepg,
     ULONG64 bugCheckParameter[4] = {};
     auto result = this->m_Control->ReadBugCheckData(
         &bugCheckCode,
-        &bugCheckParameter[0],
-        &bugCheckParameter[1],
-        &bugCheckParameter[2],
-        &bugCheckParameter[3]);
+        &bugCheckParameter[0],  // An address of the PatchGuard context
+        &bugCheckParameter[1],  // An address of a validation structure
+        &bugCheckParameter[2],  // Failure type dependent information
+        &bugCheckParameter[3]); // Type of corruption
     if (!SUCCEEDED(result) || bugCheckCode != 0x109)
     {
         Err("No CRITICAL_STRUCTURE_CORRUPTION bugcheck information was"
@@ -231,7 +238,7 @@ EXT_COMMAND(analyzepg,
         reasonInfoAddr = bugCheckParameter[1] - 0xB3B74BDEE4453415;
     }
 
-    Dump(pgContextAddr, reasonInfoAddr, true);
+    Dump(pgContextAddr, reasonInfoAddr, bugCheckParameter[2], bugCheckParameter[3], true);
 }
 
 
@@ -240,7 +247,7 @@ EXT_COMMAND(dumppg,
     "Displays the PatchGuard context",
     "{;e64;address;An address of a PatchGuard context.}")
 {
-    Dump(GetUnnamedArgU64(0), 0, false);
+    Dump(GetUnnamedArgU64(0), 0, 0, 0, false);
 }
 
 
@@ -248,6 +255,8 @@ EXT_COMMAND(dumppg,
 void EXT_CLASS::Dump(
     __in ULONG64 PgContextAddress,
     __in_opt ULONG64 ReasonInfoAddress,
+    __in ULONG64 FailureDependentInfo,
+    __in ULONG64 TypeOfCorruption,
     __in bool NeedBugCheckBanner)
 {
     // Displayed as a banner if NeedBugCheckBanner is true
@@ -275,11 +284,21 @@ CRITICAL_STRUCTURE_CORRUPTION (109)
     case TargetOsVersion::WinVista:
         break;
     case TargetOsVersion::Win7:
-        DumpInternal<PgContext_7>(PgContextAddress, ReasonInfoAddress);
+        DumpInternal<PgContext_7>(PgContextAddress, ReasonInfoAddress,
+            FailureDependentInfo, TypeOfCorruption);
         break;
     case TargetOsVersion::Win8_1:
-        DumpInternal<PgContext_8_1>(PgContextAddress, ReasonInfoAddress);
+        DumpInternal<PgContext_8_1>(PgContextAddress, ReasonInfoAddress,
+            FailureDependentInfo, TypeOfCorruption);
         break;
+    }
+
+    // In the case of type 0x106, the address of PatchGuard context is not
+    // given (it does not exist).
+    if (!PgContextAddress)
+    {
+        Out("\n");
+        return;
     }
 
     // Display extra guide messages to help users to explore more details
@@ -302,8 +321,20 @@ CRITICAL_STRUCTURE_CORRUPTION (109)
 template <typename PgContextType>
 void EXT_CLASS::DumpInternal(
     __in ULONG64 PgContextAddress,
-    __in_opt ULONG64 ReasonInfoAddress)
+    __in_opt ULONG64 ReasonInfoAddress,
+    __in ULONG64 FailureDependentInfo,
+    __in ULONG64 TypeOfCorruption)
 {
+    // In the case of type 0x106, neither the address of PatchGuard context nor
+    // the address of the validation structure are given (do not exist).
+    if (PgContextAddress == 0
+     && ReasonInfoAddress == 0
+     && TypeOfCorruption == 0x106)  // CcBcbProfiler
+    {
+        DumpForType106(FailureDependentInfo);
+        return;
+    }
+
     // Read memory contains the PatchGuard context.
     ULONG readBytes = 0;
     PgContextType pgContext = {};
@@ -338,7 +369,8 @@ void EXT_CLASS::DumpPgContext(
     WorkerRoutine                           : %y
 
 )RAW";
-    const auto typeString = GetTypeString(PgContext);
+    const auto typeString = GetTypeString(PgContext.isErroFound,
+                                PgContext.bugChkParam4Type);
     Out(DUMP_FORMAT,
         PgContextAddress,
         ReasonInfoAddress,
@@ -381,7 +413,8 @@ void EXT_CLASS::DumpPgContext(
     shouldPg_SelfEncryptWaitAndDecryptBeUsed: %y
 
 )RAW";
-    const auto typeString = GetTypeString(PgContext);
+    const auto typeString = GetTypeString(PgContext.isErroFound,
+                                PgContext.bugChkParam4Type);
     Out(DUMP_FORMAT,
         PgContextAddress,
         ReasonInfoAddress,
@@ -404,19 +437,40 @@ void EXT_CLASS::DumpPgContext(
 }
 
 
+// Display info for a corruption type 0x106 on Win8.1
+void EXT_CLASS::DumpForType106(
+    __in ULONG64 FailureDependentInfo)
+{
+    static const char DUMP_FORMAT[] = R"RAW(
+    PatchGuard Context      : %y, An address of PatchGuard context
+    Validation Data         : %y, An address of validation data that caused the error
+    Type of Corruption      : Available %I64d   : %I64x : %s
+    Failure type dependent information      : %y
+
+)RAW";
+    static const auto TYPE_OF_CORRUPTION = 0x106ull;
+    const auto typeString = GetTypeString(true, TYPE_OF_CORRUPTION);
+    Out(DUMP_FORMAT,
+        0ull,
+        0ull,
+        1ull, TYPE_OF_CORRUPTION, typeString,
+        FailureDependentInfo);
+}
+
+
 namespace {
 
 
 // Returns a description text of the corruption type number
-template <typename PgContextType>
 const char* GetTypeString(
-    __in const PgContextType& PgContext)
+    __in ULONG64 ErrorWasFound,
+    __in ULONG64 BugChkParam4Type)
 {
-    if (!PgContext.isErroFound)
+    if (!ErrorWasFound)
     {
         return "N/A";
     }
-    switch (PgContext.bugChkParam4Type)
+    switch (BugChkParam4Type)
     {
     case 0: return "A generic data region";
     case 1: return "Modification of a function or.pdata";
@@ -431,6 +485,7 @@ const char* GetTypeString(
     case 0x103: return "MmAttachSession failure";
     case 0x104: return "KeInsertQueueApc failure";
     case 0x105: return "RtlImageNtHeader failure";
+    case 0x106: return "CcBcbProfiler detected modification";
     case 0x107: return "KiTableInformation corruption";
     case 0x108: return "Not investigated :(";
     case 0x109: return "Type 2 context modification";
