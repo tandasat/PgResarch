@@ -174,11 +174,8 @@ HRESULT EXT_CLASS::Initialize()
     };
     const VersionMap supportedVersions[] =
     {
-        { "Built by: 9600.17085", TargetOsVersion::Win8_1, },
-        { "Built by: 9600.17041", TargetOsVersion::Win8_1, },
-        { "Built by: 9600.16452", TargetOsVersion::Win8_1, },
-        { "Built by: 7601.18409", TargetOsVersion::Win7, },
-        { "Built by: 7601.18247", TargetOsVersion::Win7, },
+        { "Built by: 9600.", TargetOsVersion::Win8_1, },
+        { "Built by: 7601.", TargetOsVersion::Win7, },
     };
     for (const auto& supported : supportedVersions)
     {
