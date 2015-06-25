@@ -146,16 +146,16 @@ NTSTATUS DriverEntry(
     DBG_PRINT("[%4x:%4x] Initialize : PatchGuard has been disarmed.\n",
         PsGetCurrentProcessId(), PsGetCurrentThreadId());
 
-    // Enables rootkit function by installing kernel patches. The driver should
-    // never be unloaded after this function succeeded as it installs hook code
-    // that calls this driver.
-    status = DispgpEnableRootkitFunction();
-    if (!NT_SUCCESS(status))
-    {
-        return status;
-    }
-    DBG_PRINT("[%4x:%4x] Initialize : Hiding processes has been enabled.\n",
-        PsGetCurrentProcessId(), PsGetCurrentThreadId());
+    //// Enables rootkit function by installing kernel patches. The driver should
+    //// never be unloaded after this function succeeded as it installs hook code
+    //// that calls this driver.
+    //status = DispgpEnableRootkitFunction();
+    //if (!NT_SUCCESS(status))
+    //{
+    //    return status;
+    //}
+    //DBG_PRINT("[%4x:%4x] Initialize : Hiding processes has been enabled.\n",
+    //    PsGetCurrentProcessId(), PsGetCurrentThreadId());
 
     // Disable DSE if applicable
     if (!DispgpIsWindowsXp())

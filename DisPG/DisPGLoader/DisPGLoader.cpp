@@ -162,12 +162,12 @@ bool AppMain(
 bool IsSupportedEnvironment(
     __out std::uint64_t& KernelVersion)
 {
-    //// All platforms before Windows 8 are supported and do not require
-    //// their detailed kernel versions
-    //if (!IsWindows8OrGreater())
-    //{
-    //    return true;
-    //}
+    // All platforms before Windows 8 are supported and do not require
+    // their detailed kernel versions
+    if (!IsWindows8OrGreater())
+    {
+        return true;
+    }
 
     // Get a full path of system32
     std::array<TCHAR, MAX_PATH> sysDir;
@@ -198,10 +198,10 @@ bool IsSupportedEnvironment(
         { 0x0071c6d7, 17085, },     // Win 8.1
         { 0x00721d34, 17041, },     // Win 8.1
         { 0x007120d6, 16452, },     // Win 8.1
-        { 0x00554c03, 0 },          // Win 7        18409
-        { 0x0054cbb3, 0 },          // Win 7        18247
-        { 0x00480ce6, 0 },          // Win Vista    18881
-        { 0x00459d47, 0 },          // Win XP        5138
+        //{ 0x00554c03, 0 },          // Win 7        18409
+        //{ 0x0054cbb3, 0 },          // Win 7        18247
+        //{ 0x00480ce6, 0 },          // Win Vista    18881
+        //{ 0x00459d47, 0 },          // Win XP        5138
     };
     for (const auto& map : SUPPORTED_NTOSKRNL_HASHES)
     {
