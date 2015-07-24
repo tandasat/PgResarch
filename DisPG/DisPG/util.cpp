@@ -157,15 +157,13 @@ NTSTATUS ForEachProcessors(
         processorNumber++)
     {
         // Switch the current processor
-        KeSetSystemAffinityThread(static_cast<KAFFINITY>(1 << processorNumber));
-        const auto affinity = std::experimental::scope_guard(
-            KeRevertToUserAffinityThread);
-
-        const auto oldIrql = std::experimental::unique_resource(
-            KeRaiseIrqlToDpcLevel(), KeLowerIrql);
+        KeSetSystemAffinityThread(static_cast<KAFFINITY>(1ull << processorNumber));
+        const auto oldIrql = KeRaiseIrqlToDpcLevel();
 
         // Execute callback
         const auto status = CallbackRoutine(Context);
+        KeLowerIrql(oldIrql);
+        KeRevertToUserAffinityThread();
         if (!NT_SUCCESS(status))
         {
             return status;
@@ -264,12 +262,12 @@ void PatchReal(
     __in const void* PatchCode,
     __in SIZE_T PatchBytes)
 {
-    auto oldIrql = std::experimental::unique_resource(
-        KeRaiseIrqlToDpcLevel(), KeLowerIrql);
+    const auto oldIrql = KeRaiseIrqlToDpcLevel();
     Ia32DisableWriteProtect();
     auto protection = std::experimental::scope_guard(Ia32EnableWriteProtect);
     memcpy(PatchAddr, PatchCode, PatchBytes);
     __writecr3(__readcr3());
+    KeLowerIrql(oldIrql);
 }
 
 

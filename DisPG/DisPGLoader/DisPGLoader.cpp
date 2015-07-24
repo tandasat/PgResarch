@@ -3,7 +3,10 @@
 // C/C++ standard headers
 // Other external headers
 // Windows headers
+#pragma warning(push)
+#pragma warning(disable : 4091)
 #include <ImageHlp.h>
+#pragma warning(pop)
 #pragma comment(lib, "Imagehlp.lib")
 
 // Original headers
@@ -198,10 +201,6 @@ bool IsSupportedEnvironment(
         { 0x0071c6d7, 17085, },     // Win 8.1
         { 0x00721d34, 17041, },     // Win 8.1
         { 0x007120d6, 16452, },     // Win 8.1
-        //{ 0x00554c03, 0 },          // Win 7        18409
-        //{ 0x0054cbb3, 0 },          // Win 7        18247
-        //{ 0x00480ce6, 0 },          // Win Vista    18881
-        //{ 0x00459d47, 0 },          // Win XP        5138
     };
     for (const auto& map : SUPPORTED_NTOSKRNL_HASHES)
     {
@@ -216,7 +215,11 @@ bool IsSupportedEnvironment(
     std::cout
         << "Unsupported ntoskrnl.exe ("
         << std::hex << std::setw(8) << std::setfill('0') << checkSum
-        << ") was detected." << std::endl;
+        << ") was detected.\n" 
+        << "\n"
+        << "Try meow if you are targeting Windows 8.1. For more information:\n"
+        << "  https://github.com/tandasat/meow"
+        << "\n" << std::endl;
     return false;
 }
 

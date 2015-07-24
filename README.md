@@ -1,7 +1,7 @@
 PgResarch
 =========
 
-See following sub-projects:
+See the following sub-projects:
 
-- DisPG for runtime disarming PatchGuard.
-- 109 for getting an Windbg extention for PatchGuard research.
+- DisPG for disarming PatchGuard.
+- 109 for getting an Windbg extension for PatchGuard research.

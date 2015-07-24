@@ -299,6 +299,11 @@ bool WinXpCollectPatchGuardContexts(
         return true;
     }
 
+    if (!Context)
+    {
+        return false;
+    }
+
     auto storage = static_cast<PatchGuardContexts*>(Context);
     PatchGuardContextInfo result = {};
     for (SIZE_T searchedBytes = 0; searchedBytes < SizeInBytes; /**/)
@@ -317,14 +322,15 @@ bool WinXpCollectPatchGuardContexts(
             storage->PgContexts[storage->NumberOfPgContexts] = result;
             storage->NumberOfPgContexts++;
 
-            DBG_PRINT("[%4x:%4x] PatchGuard %p : XorKey %p\n",
-                PsGetCurrentProcessId(), PsGetCurrentThreadId(),
+            DBG_PRINT("[%5Iu:%5Iu] PatchGuard %016llX : XorKey %016llX\n",
+                reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+                reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()),
                 result.PgContext, result.XorKey);
             break;
         }
     }
 
-    // TellWinXpEnumBigPages to stop enumerating pages when the storage is full
+    // Tell WinXpEnumBigPages to stop enumerating pages when the storage is full
     return (storage->NumberOfPgContexts <
             storage->MAX_SUPPORTED_NUMBER_OF_PG_CONTEXTS);
 }

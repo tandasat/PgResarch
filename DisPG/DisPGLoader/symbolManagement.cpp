@@ -116,7 +116,7 @@ bool RegisterSymbolInformation(
                 PrintErrorMessage(TEXT("RegSetPtr failed."));
                 return false;
             }
-            _tprintf(_T("%p : %s\n"), address, requireSymbol.c_str());
+            _tprintf(_T("%016llX : %s\n"), address, requireSymbol.c_str());
         }
     }
     return true;
@@ -175,7 +175,6 @@ std::vector<std::basic_string<TCHAR>> GetRequireSymbolNames()
         list.emplace_back(TEXT("ntoskrnl!KiAttemptFastRemovePriQueue"));
         list.emplace_back(TEXT("ntoskrnl!KeDelayExecutionThread"));
         list.emplace_back(TEXT("ntoskrnl!KeWaitForSingleObject"));
-        list.emplace_back(TEXT("ci!g_CiOptions"));
     }
     else
     {
@@ -183,12 +182,6 @@ std::vector<std::basic_string<TCHAR>> GetRequireSymbolNames()
         list.emplace_back(TEXT("ntoskrnl!PoolBigPageTable"));
         list.emplace_back(TEXT("ntoskrnl!PoolBigPageTableSize"));
         list.emplace_back(TEXT("ntoskrnl!MmNonPagedPoolStart"));
-    }
-
-    if (IsWindowsVistaOrGreater() && !IsWindows8OrGreater())
-    {
-        // 7, Vista
-        list.emplace_back(TEXT("ntoskrnl!g_CiEnabled"));
     }
     return list;
 }

@@ -1,3 +1,6 @@
+//
+// This module declares interfaces to exclusivity functions.
+//
 #pragma once
 
 
@@ -24,12 +27,12 @@
 // prototypes
 //
 
-EXTERN_C
-void* ExclGainExclusivity();
+_IRQL_raises_(DISPATCH_LEVEL) EXTERN_C
+void *ExclGainExclusivity();
 
-EXTERN_C
+_IRQL_requires_(DISPATCH_LEVEL) EXTERN_C
 void ExclReleaseExclusivity(
-    __in_opt void* Exclusivity);
+    _In_opt_ void *Exclusivity);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,4 +45,3 @@ void ExclReleaseExclusivity(
 //
 // implementations
 //
-

@@ -23,7 +23,10 @@
 // It should not matter in this program at the current time as it is a single
 // thread program.
 //
+#pragma warning(push)
+#pragma warning(disable : 4091)
 #include <DbgHelp.h>
+#pragma warning(pop)
 
 // Original headers
 

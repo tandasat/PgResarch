@@ -386,9 +386,10 @@ void Win8pDetectPatchGuardWorkItem(
             Item->Parameter);
         ULONG64 routine = param->EncodedRoutine ^ param->XorKey;
         ULONG64 context = param->EncodedPgContext ^ param->XorKey;
-        DBG_PRINT("[%4x:%4x] PatchGuard %p :"
-                  " KiScbQueueScanWorker (%p) was dequeued.\n",
-            PsGetCurrentProcessId(), PsGetCurrentThreadId(),
+        DBG_PRINT("[%5Iu:%5Iu] PatchGuard %016llX :"
+                  " KiScbQueueScanWorker (%016llX) was dequeued.\n",
+            reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+            reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()),
             context, routine);
 
         pgContext = reinterpret_cast<PgContext_8_1*>(context);
@@ -397,9 +398,10 @@ void Win8pDetectPatchGuardWorkItem(
     else if (*reinterpret_cast<ULONG_PTR*>(Item->WorkerRoutine)
         == WIN8_FsRtlUninitializeSmallMcb_PATTERN)
     {
-        DBG_PRINT("[%4x:%4x] PatchGuard %p :"
+        DBG_PRINT("[%5Iu:%5Iu] PatchGuard %p :"
                   " FsRtlUninitializeSmallMcb (%p) was dequeued.\n",
-            PsGetCurrentProcessId(), PsGetCurrentThreadId(),
+            reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+            reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()),
             Item->Parameter, Item->WorkerRoutine);
 
         pgContext = reinterpret_cast<PgContext_8_1*>(Item->Parameter);
@@ -430,9 +432,10 @@ EXTERN_C
 void Win8HandlePg_IndependentContextWorkItemRoutine(
     __in Pg_IndependentContextWorkItemContext* Context)
 {
-    DBG_PRINT("[%4x:%4x] PatchGuard %p :"
+    DBG_PRINT("[%5Iu:%5Iu] PatchGuard %016llX :"
               " Pg_IndependentContextWorkItemRoutine was called.\n",
-        PsGetCurrentProcessId(), PsGetCurrentThreadId(),
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()),
         Context->PgContext);
 
     if (Win8pIsMonitoringModeEnabled())
@@ -473,10 +476,11 @@ ULONG_PTR Win8HandleKeDelayExecutionThread(
     // Check if the thread is going to return to Pg_SelfEncryptWaitAndDecrypt
     if (returnAddr == pg_SelfEncryptWaitAndDecrypt)
     {
-        DBG_PRINT("[%4x:%4x] PatchGuard ???????????????? :"
+        DBG_PRINT("[%5Iu:%5Iu] PatchGuard ???????????????? :"
                   " KeDelayExecutionThread is returning to"
-                  " Pg_SelfEncryptWaitAndDecrypt (%p).\n",
-            PsGetCurrentProcessId(), PsGetCurrentThreadId(),
+                  " Pg_SelfEncryptWaitAndDecrypt (%016llX).\n",
+            reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+            reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()),
             returnAddr);
         //DBG_BREAK();
         return 1;
@@ -486,10 +490,11 @@ ULONG_PTR Win8HandleKeDelayExecutionThread(
     if (*reinterpret_cast<ULONG64*>(returnAddr)
         == WIN8_KeDelayExecutionThread_RETURN_CODE_PATTERN)
     {
-        DBG_PRINT("[%4x:%4x] PatchGuard ???????????????? :"
+        DBG_PRINT("[%5Iu:%5Iu] PatchGuard ???????????????? :"
                   " KeDelayExecutionThread is returning to"
-                  " FsRtlMdlReadCompleteDevEx (%p).\n",
-            PsGetCurrentProcessId(), PsGetCurrentThreadId(),
+                  " FsRtlMdlReadCompleteDevEx (%016llX).\n",
+            reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+            reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()),
             returnAddr);
         //DBG_BREAK();
         return 2;
@@ -517,10 +522,11 @@ ULONG_PTR Win8HandleKeWaitForSingleObject(
     if (*reinterpret_cast<ULONG_PTR*>(returnAddr)
         == WIN8_KeWaitForSingleObject_RETURN_CODE_PATTERN)
     {
-        DBG_PRINT("[%4x:%4x] PatchGuard ???????????????? :"
+        DBG_PRINT("[%5Iu:%5Iu] PatchGuard ???????????????? :"
                   " KeWaitForSingleObject is returning to"
-                  " FsRtlMdlReadCompleteDevEx (%p).\n",
-            PsGetCurrentProcessId(), PsGetCurrentThreadId(),
+                  " FsRtlMdlReadCompleteDevEx (%016llX).\n",
+            reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+            reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()),
             returnAddr);
         //DBG_BREAK();
         return 1;

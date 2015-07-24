@@ -1,87 +1,104 @@
 DisPG
-==========================
+======
 
-This is proof-of-concept code to encourage security researchers to examine 
-PatchGuard more by showing actual code that disables PatchGuard at runtime.
+This is proof-of-concept code disabling PatchGuard on XP SP2, Vista SP2, 7 SP1 
+and certain build version of 8.1 at run-time.
 
-It does following things:
-
-- disarms PatchGuard on certain patch versions of XP SP2, Vista SP2, 7 SP1 and 8.1 at run-time.
-- disables Driver Signing Enforcement and allows you to install an arbitrary unsigned driver so that you can examine the x64 kernel using kernel patch techniques if you need.
+If you are targeting Windows 8.1, use [meow](https://github.com/tandasat/meow)
+over this as DisPG does not support recent builds of 8.1.
 
 See [NOTE.md](NOTE.md) for implementation details.
 
+
 Demo
-------------
+-----
 
 This is how it is supposed to work. 
 
-[Runtime Disabling PatchGuard on Win8.1(Youtube)](https://www.youtube.com/watch?v=jO0o3XEuDrk)
+Runtime Disabling PatchGuard on [Win8.1](https://www.youtube.com/watch?v=jO0o3XEuDrk)
+and [Win7 SP1](https://www.youtube.com/watch?v=WTHXiRTID9g)(Youtube)
 
+Note that the rootkit function in those demo is not included.
+
+
+Important
+----------
+
+This program is not going to work forever since PatchGuard is a moving target. 
+I will notify you with updating this note when it happened. I am probably 
+not going to update code for fix, however. 
 
 
 Installation
----------------
+-------------
 
 Get an archive file for compiled files form this link:
 
     https://github.com/tandasat/RemoteWriteMonitor/releases/latest
 
-### Configuring x64 Win8.1
+On the x64 platform, you have to enable test signing to install the driver.
+To do that, open the command prompt with the administrator privilege and type 
+the following command, and then restart the system to activate the change:
 
-1. Install x64 Win8.1 (editions should not matter). Using a virtual machine is strongly recommended.
-2. Enable test signing.
- 1. Launch a command prompt with Administrator privilege.
- 2. Execute following commands.
+   > bcdedit /set {current} testsigning on
+   
+To install the driver, extract the archive file and make sure that internet 
+connection is available since this program needs to download symbol files unless
+your system already has right symbol files. 
 
-            > bcdedit /copy {current} /d "Test Signing Mode"
-            The entry was successfully copied to {xxxx}.
-            > bcdedit /set {xxxx} TESTSIGNING ON
+Optionally, you may want to use DebugView in order to see logs from the driver.
 
-3. Copy the \x64\Release folder to the test box (a location should not matter).
-4. Shutdown Windows.
-5. (Optional) Take a snapshot if you are using a VM.
+Then, execute DisPGLoader.exe with the Administrator privilege. It addresses
+symbols and loads the driver, which disables PatchGuard. On successful
+installation, you should see messages like this:
 
-### Getting Ready for Execution
-1. Boot Windows in "Test Signing Mode" mode.
-2. Execute [Dbgview](http://technet.microsoft.com/en-ca/sysinternals/bb896647.aspx)
-   with Administrator privilege and enable Capture Kernel.
-
-### Executing and Monitoring
-Run DisPGLoader.exe with Administrator privilege and internet connection so 
-that it can download debug symbols. You should see following messages.
-
-	FFFFF8030A2F8D10 : ntoskrnl!ExAcquireResourceSharedLite
-	...
-	Loading the driver succeeded.
-	Press any key to continue . . .
-
-And also should see following messages in DebugView.
-
-	[   4:  58] Initialize : Starting DisPG.
-	[   4:  58] Initialize : PatchGuard has been disarmed.
-	[   4:  58] Initialize : Driver Signing Enforcement has been disabled.
-	[   4:  58] Initialize : Enjoy freedom ;)
-	[   4: 10c] PatchGuard xxxxxxxxxxxxxxxx : blahblahblah.
-	[   4: 10c] PatchGuard yyyyyyyyyyyyyyyy : blahblahblah.
-
-Each output with 'PatchGuard' shows execution of validation by
-PatchGuard, yet none of them should cause BSOD because it has been disarmed.
-xxxxxxxxxxxxxxxx and yyyyyyyyyyyyyyyy are addresses of PatchGuard contexts.
-It may or may not change each time, but after rebooting Windows, you will
-see different patterns as most of random factors are decided at the boot
-time.
-
-Note that you will see different output when you run the code on Windows 7,
-Vista and XP because an implementation of disarming code for them is completely different.
+    FFFFF8030A2F8D10 : ntoskrnl!ExAcquireResourceSharedLite
+    ...
+    Loading the driver succeeded.
+    Press any key to continue . .
 
 
-When you reboot Windows, DisPG will not be reloaded automatically.
+Also, you should see messages like below in DebugView.
+
+On Windows 8.1:
+    [    4:   58] Initialize : Starting DisPG.
+    [    4:   58] Initialize : PatchGuard has been disarmed.
+    [    4:   58] Initialize : Enjoy freedom ;)
+    [    4:  10c] PatchGuard xxxxxxxxxxxxxxxx : blahblahblah.
+    [    4:  10c] PatchGuard yyyyyyyyyyyyyyyy : blahblahblah.
+
+Each output with 'PatchGuard' shows execution of validation by PatchGuard, yet
+none of them should cause BSOD because it has been disarmed. xxxxxxxxxxxxxxxx
+and yyyyyyyyyyyyyyyy are addresses of PatchGuard contexts. It may or may not
+change each time, but after rebooting Windows, you will see different patterns
+as most of random factors are decided at the boot time.
+
+On Windows 7 and older:
+    [    4:   52] Initialize : Starting DisPG.
+    [    4:   52] PatchGuard FFFFFA800195914C : XorKey 0000000000000000
+    [    4:   52] PatchGuard FFFFFA8003BBF11D : XorKey 63E62F12D1DEC502
+    [    4:   52] Initialize : PatchGuard has been disarmed.
+    [    4:   52] Initialize : Enjoy freedom ;)
+
+On those platforms, DisPG locates and disables all PatchGuard contexts at once.
+In this example, there are two contexts at FFFFFA800195914C and FFFFFA8003BBF11D
+encoded with XOR keys 0 and 63E62F12D1DEC502, respectively.
+
+Note that DisPG is not loaded automatically after system reboot.
+
 
 Uninstallation
 ---------------
 It cannot be stopped and removed at runtime as it is just concept code. In order
-to uninstall DIsPG, you can reboot Windows and simply delete all files you copied.
+to uninstall DisPG, you can reboot Windows and simply delete all files you copied.
+
+
+Usage
+------
+
+Once you started and disabled PatchGuard, you are free to install your own tools
+using hooks. [RemoteWriteMonitor](https://github.com/tandasat/RemoteWriteMonitor)
+is an example of this type of tools.
 
 
 Tested Platforms
@@ -91,8 +108,7 @@ Tested Platforms
 - Windows Vista SP2 x64
 - Windows XP SP2 x64
 
+
 License
 -----------------
 This software is released under the MIT License, see LICENSE.
-
-
