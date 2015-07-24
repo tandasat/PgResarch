@@ -2,18 +2,15 @@ DisPG
 ======
 
 This is proof-of-concept code disabling PatchGuard on XP SP2, Vista SP2, 7 SP1 
-and certain build version of 8.1 at run-time.
-
-If you are targeting Windows 8.1, use [meow](https://github.com/tandasat/meow)
-over this as DisPG does not support recent builds of 8.1.
+and certain build version of 8.1 at run-time. If you are targeting Windows 8.1, 
+use [meow](https://github.com/tandasat/meow) over this as DisPG does not 
+support recent builds of 8.1.
 
 See [NOTE.md](NOTE.md) for implementation details.
 
 
 Demo
 -----
-
-This is how it is supposed to work. 
 
 Runtime Disabling PatchGuard on [Win8.1](https://www.youtube.com/watch?v=jO0o3XEuDrk)
 and [Win7 SP1](https://www.youtube.com/watch?v=WTHXiRTID9g)(Youtube)
@@ -34,13 +31,13 @@ Installation
 
 Get an archive file for compiled files form this link:
 
-    https://github.com/tandasat/RemoteWriteMonitor/releases/latest
+    https://github.com/tandasat/PgResarch/releases/latest
 
 On the x64 platform, you have to enable test signing to install the driver.
 To do that, open the command prompt with the administrator privilege and type 
 the following command, and then restart the system to activate the change:
 
-   > bcdedit /set {current} testsigning on
+   bcdedit /set {current} testsigning on
    
 To install the driver, extract the archive file and make sure that internet 
 connection is available since this program needs to download symbol files unless
@@ -61,6 +58,7 @@ installation, you should see messages like this:
 Also, you should see messages like below in DebugView.
 
 On Windows 8.1:
+
     [    4:   58] Initialize : Starting DisPG.
     [    4:   58] Initialize : PatchGuard has been disarmed.
     [    4:   58] Initialize : Enjoy freedom ;)
@@ -74,6 +72,7 @@ change each time, but after rebooting Windows, you will see different patterns
 as most of random factors are decided at the boot time.
 
 On Windows 7 and older:
+
     [    4:   52] Initialize : Starting DisPG.
     [    4:   52] PatchGuard FFFFFA800195914C : XorKey 0000000000000000
     [    4:   52] PatchGuard FFFFFA8003BBF11D : XorKey 63E62F12D1DEC502
