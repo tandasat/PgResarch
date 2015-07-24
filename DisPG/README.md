@@ -37,7 +37,7 @@ On the x64 platform, you have to enable test signing to install the driver.
 To do that, open the command prompt with the administrator privilege and type 
 the following command, and then restart the system to activate the change:
 
-   bcdedit /set {current} testsigning on
+    bcdedit /set {current} testsigning on
    
 To install the driver, extract the archive file and make sure that internet 
 connection is available since this program needs to download symbol files unless
