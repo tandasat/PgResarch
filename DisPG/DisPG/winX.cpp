@@ -221,9 +221,14 @@ NTSTATUS WinXDisablePatchGuard(
     }
 
     //DBG_BREAK();
+    DBG_PRINT("[%5Iu:%5Iu] Initialize : %Iu contexts found.\n",
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()),
+        contexts.NumberOfPgContexts);
 
     auto status = STATUS_SUCCESS;
-    if (contexts.NumberOfPgContexts
+    if (!contexts.NumberOfPgContexts ||
+        contexts.NumberOfPgContexts
         == contexts.MAX_SUPPORTED_NUMBER_OF_PG_CONTEXTS)
     {
         // If a lot of PatchGuard contexts were found, it is likely an error
@@ -254,6 +259,15 @@ void WinXpEnumBigPages(
     __in TableType* BigPageTable,
     __in SIZE_T NumberOfBigPageTable)
 {
+    DBG_PRINT("[%5Iu:%5Iu] Initialize : PoolBigPageTable = %p\n",
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()),
+        BigPageTable);
+    DBG_PRINT("[%5Iu:%5Iu] Initialize : PoolBigPageTableSize = %p\n",
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentProcessId()),
+        reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()),
+        NumberOfBigPageTable);
+
     for (SIZE_T i = 0; i < NumberOfBigPageTable; ++i)
     {
         auto entry = &BigPageTable[i];
