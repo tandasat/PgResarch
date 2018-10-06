@@ -4,7 +4,6 @@
 //
 #include "stdafx.h"
 #include "util.h"
-#include "intrinsics.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,6 +23,19 @@ static const LONG UTIL_TAG = 'util';
 // Change it to 0xCC when you want to install break points for patched code
 static const UCHAR UTIL_HOOK_ENTRY_CODE = 0x90;
 
+// Page table related
+#ifndef PXE_BASE
+#define PXE_BASE      0xFFFFF6FB7DBED000UI64
+#define PPE_BASE      0xFFFFF6FB7DA00000UI64
+#define PDE_BASE      0xFFFFF6FB40000000UI64
+#define PTE_BASE      0xFFFFF68000000000UI64
+#define PTI_SHIFT     12
+#define PDI_SHIFT     21
+#define PPI_SHIFT     30
+#define PXI_SHIFT     39
+#define PXE_PER_PAGE  512
+#define PXI_MASK      (PXE_PER_PAGE - 1)
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -264,10 +276,10 @@ void PatchReal(
 {
     const auto oldIrql = KeRaiseIrqlToDpcLevel();
     Ia32DisableWriteProtect();
-    auto protection = std::experimental::scope_guard(Ia32EnableWriteProtect);
     memcpy(PatchAddr, PatchCode, PatchBytes);
     __writecr3(__readcr3());
     KeLowerIrql(oldIrql);
+    Ia32EnableWriteProtect();
 }
 
 

@@ -30,9 +30,9 @@ DisPG attacks poor encryption with a method briefly described in [[1]](http://ww
 
 #### 2. A PatchGuard context is always located in the certain memory region
 
-  It would be impossible to conduct the described attack above within a realistic time period if you had to seek entire kernel memory to try XOR. Fortunately for you, a PatchGuard context always resides in a memory region tracked by a structure called PoolBigPageTable. This table holds pointers to allocated pools whose sizes are bigger than the page size. As a size of a PatchGuard context is big enough to be handled by this table, and there is no other mechanism to allocate a PatchGuard context, all PatchGuard contexts can be found farily quickly by enumerating PoolBigPageTable and trying the XOR attack.
+  It would be impossible to conduct the described attack above within a realistic time period if you had to seek entire kernel memory to try XOR. Fortunately for you, a PatchGuard context always resides in a memory region tracked by a structure called PoolBigPageTable. This table holds pointers to allocated pools whose sizes are bigger than the page size. As a size of a PatchGuard context is big enough to be handled by this table, and there is no other mechanism to allocate a PatchGuard context, all PatchGuard contexts can be found fairly quickly by enumerating PoolBigPageTable and trying the XOR attack.
 
-Exploiting these flaws allows you to find and modify PatchGuard contexts without heavily deoending on hard-coded values.
+Exploiting these flaws allows you to find and modify PatchGuard contexts without heavily depending on hard-coded values.
 
 As a note, there is another runtime bypass method on Windows 7 and older platforms; that installs a patch on RtlCaptureContext() [[3]](http://vrt-blog.snort.org/2014/08/the-windows-81-kernel-patch-protection.html).
 
@@ -46,7 +46,7 @@ Regarding the issue of XOR, Windows 8.1 introduced more than one level of XOR op
 
 #### The Attack Vector
 
-Although it may be still possbile to overcome these countermeasures, DisPG takes a different way on Windows 8.1; that is installing patches into some functions used by PatchGuard. Here is a list of these target functions:
+Although it may be still possible to overcome these countermeasures, DisPG takes a different way on Windows 8.1; that is installing patches into some functions used by PatchGuard. Here is a list of these target functions:
 
 1. KiCommitThreadWait() and KiAttemptFastRemovePriQueue()
 1. KeDelayExecutionThread() and KeWaitForSingleObject()
@@ -59,9 +59,9 @@ In order to understand the reason why they are targeted, let's take a look at th
 1. Waiting for being dequeued from a work item queue through KiCommitThreadWait() or KiAttemptFastRemovePriQueue().
 1. Running very beginning of PASSIVE\_LEVEL operations that possibly call some sleep functions.
 1. Waiting some time in either KeDelayExecutionThread() or KeWaitForSingleObject() if they were called at state 4.
-1. Running remaining PASSIVE\_LEVEL operations such as executing the second validation routine (FsRtlMdlReadCompleteDevEx()) and schduling a next PatchGuard context into one of timer mechanisms (go to state 1)
+1. Running remaining PASSIVE\_LEVEL operations such as executing the second validation routine (FsRtlMdlReadCompleteDevEx()) and scheduling a next PatchGuard context into one of timer mechanisms (go to state 1)
 
-The basic idea is _catch all PatchGuard contexts before they run the second validation._ The targeted functions listed above were selected for this porpose.
+The basic idea is _catch all PatchGuard contexts before they run the second validation._ The targeted functions listed above were selected for this propose.
 
 First, patching KiCommitThreadWait() and KiAttemptFastRemovePriQueue() allows you to see what work items are being dequeued and filter them if they are PatchGuard related items. It is important to prevent a PatchGuard context from switching from state 3 to state 4-6 by this filtering because state 6 detects any patch you made and calls SdbpCheckDll() to stop the system. It is, however, still safe to make patches if a PatchGuard context is in either state 1, 2 or 3 unless you modify certain functions and data structures validated by Pg\_SelfValidation() at state 2 (hereinafter referred to as protected functions). These functions include ExQueueWorkItem() and ExpWorkerThread(); so we cannot patch these functions to find PatchGuard related work items more directly.
 
@@ -69,13 +69,13 @@ Second, by modifying the end of KeDelayExecutionThread() and KeWaitForSingleObje
 
 In addition to that, Pg\_IndependentContextWorkItemRoutine() needs to be handled. This is an unnamed function located at HalPerformEndOfInterrupt() - 0x4c and called instead of ExQueueWorkItem() on state 2 to shift to state 3 only when PatchGuard scheduling method '3 - PsCreateSystemThread' (see [[2]](http://blog.ptsecurity.com/2014/09/microsoft-windows-81-kernel-patch.html)) was selected. In order to handle this case, we additionally need to install the patch on Pg\_IndependentContextWorkItemRoutine() to catch PatchGuard related threads since work items are not used. Interestingly, in spite of the fact that ExQueueWorkItem() is one of protected functions (validated on state 2) and Pg\_IndependentContextWorkItemRoutine() is a replacement of this function, it is not a protected function and can be modified without being checked by Pg_SelfValidation().
 
-By installing these patches, you should be able to eliminate all PatchGuard contexts before they run into the second validation routine without being detected by the fiest validation routine.
+By installing these patches, you should be able to eliminate all PatchGuard contexts before they run into the second validation routine without being detected by the first validation routine.
 
 #### Faults and Other Attack Vectors
 
 There is a possibility that a PatchGuard can detect these modification. If you installed the patches when one of PatchGuard contexts is state 4 and switched to state 6 without calling sleep functions, or in the middle of state 6, the second validation routine will report the corruption, although this windows is short, and I have not faced this condition yet.
 
-Also, since it employes full of hard-coded values that heavily depending on binary versions of ntoskrnel.exe, this approach is not as generic as the ways described in [2]. If you are interested in PatchGuard, regardless of whether you want to disable it, it will be really fun to implement those generic attack vectors.
+Also, since it employs full of hard-coded values that heavily depending on binary versions of ntoskrnel.exe, this approach is not as generic as the ways described in [2]. If you are interested in PatchGuard, regardless of whether you want to disable it, it will be really fun to implement those generic attack vectors.
 
 ### References
 

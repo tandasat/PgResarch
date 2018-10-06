@@ -1,9 +1,9 @@
 DisPG
 ======
 
-This is proof-of-concept code disabling PatchGuard on XP SP2, Vista SP2, 7 SP1 
-and certain build version of 8.1 at run-time. If you are targeting Windows 8.1, 
-use [meow](https://github.com/tandasat/meow) over this as DisPG does not 
+This is proof-of-concept code disabling PatchGuard on XP SP2, Vista SP2, 7 SP1
+and certain build version of 8.1 at run-time. If you are targeting Windows 8.1,
+use [meow](https://github.com/tandasat/meow) over this as DisPG does not
 support recent builds of 8.1.
 
 See [NOTE.md](NOTE.md) for implementation details.
@@ -21,9 +21,9 @@ Note that the rootkit function in those demo is not included.
 Important
 ----------
 
-This program is not going to work forever since PatchGuard is a moving target. 
-I will notify you with updating this note when it happened. I am probably 
-not going to update code for fix, however. 
+This program is not going to work forever since PatchGuard is a moving target.
+I will notify you with updating this note when it happened. I am probably
+not going to update code for fix, however.
 
 
 Installation
@@ -34,14 +34,14 @@ Get an archive file for compiled files form this link:
     https://github.com/tandasat/PgResarch/releases/latest
 
 On the x64 platform, you have to enable test signing to install the driver.
-To do that, open the command prompt with the administrator privilege and type 
+To do that, open the command prompt with the administrator privilege and type
 the following command, and then restart the system to activate the change:
 
     bcdedit /set {current} testsigning on
-   
-To install the driver, extract the archive file and make sure that internet 
+
+To install the driver, extract the archive file and make sure that Internet
 connection is available since this program needs to download symbol files unless
-your system already has right symbol files. 
+your system already has right symbol files.
 
 Optionally, you may want to use DebugView in order to see logs from the driver.
 
@@ -104,8 +104,14 @@ Tested Platforms
 -----------------
 - Windows 8.1 x64 (ntoskrnl.exe versions: 17085, 17041, 16452)
 - Windows 7 SP1 x64
-- Windows Vista SP2 x64
-- Windows XP SP2 x64
+- Windows Vista SP2 x64 (See the note below)
+- Windows XP SP2 x64 (See the note below)
+
+Note that due to the fact that recent WDK and Visual Studio no longer support
+drivers targeting Windows Vista and older, the compiled driver file through
+Visual Studio may not work properly. Try the revision 6f35952 as the last
+verified version for those platforms. Building of the revision will require old
+Visual Studio and WDK and is not supported by the author anymore, however.
 
 
 License

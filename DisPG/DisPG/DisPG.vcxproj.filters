@@ -47,9 +47,6 @@
     <ClInclude Include="exclusivity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="intrinsics.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -61,12 +58,6 @@
     </ClInclude>
     <ClInclude Include="winX.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Common\scope_guard.h">
-      <Filter>Header Files\../../Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Common\unique_resource.h">
-      <Filter>Header Files\../../Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

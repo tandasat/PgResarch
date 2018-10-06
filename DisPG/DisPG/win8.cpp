@@ -36,8 +36,8 @@ static const UCHAR WIN8_PG_CONTEXT_HOOK_ENTRY_CODE = 0x90;
 // implementation, it was just hard coded as I was lazy.
 static const ULONG64 WIN8_FsRtlUninitializeSmallMcb_PATTERN = 0xff5ff7e848ec8348;
 
-// Offset in bytes from the top of KiScbQueueScanWorker to a return address of 
-// a register function call in Pg_SelfEncryptWaitAndDecrypt. A more generic way 
+// Offset in bytes from the top of KiScbQueueScanWorker to a return address of
+// a register function call in Pg_SelfEncryptWaitAndDecrypt. A more generic way
 // should be found.
 static const ULONG WIN8_OFFSET_TO_Pg_SelfEncryptWaitAndDecrypt = 0x178;
 
@@ -203,8 +203,7 @@ NTSTATUS Win8pInstallHooks(
 {
     PAGED_CODE();
 
-    auto exclusivity = std::experimental::unique_resource(
-        ExclGainExclusivity(), ExclReleaseExclusivity);
+    auto exclusivity = ExclGainExclusivity();
     if (!exclusivity)
     {
         return STATUS_UNSUCCESSFUL;
@@ -216,14 +215,14 @@ NTSTATUS Win8pInstallHooks(
     if (Symbols.KernelVersion == 16452)
     {
         Win8pInstallHook2(
-            Symbols.KiCommitThreadWait + 0x12a, 
+            Symbols.KiCommitThreadWait + 0x12a,
             reinterpret_cast<ULONG_PTR>(AsmKiCommitThreadWait_16452));
     }
-    else if (Symbols.KernelVersion == 17041 || 
+    else if (Symbols.KernelVersion == 17041 ||
              Symbols.KernelVersion == 17085)
     {
         Win8pInstallHook2(
-            Symbols.KiCommitThreadWait + 0x12c, 
+            Symbols.KiCommitThreadWait + 0x12c,
             reinterpret_cast<ULONG_PTR>(AsmKiCommitThreadWait_17041));
     }
     Win8pInstallHook2(
@@ -250,17 +249,18 @@ NTSTATUS Win8pInstallHooks(
     if (Symbols.KernelVersion == 16452)
     {
         Win8pInstallHook2(
-            Symbols.KeWaitForSingleObject + 0x1dd, 
+            Symbols.KeWaitForSingleObject + 0x1dd,
             reinterpret_cast<ULONG_PTR>(AsmKeWaitForSingleObject_16452));
     }
-    else if (Symbols.KernelVersion == 17041 || 
+    else if (Symbols.KernelVersion == 17041 ||
              Symbols.KernelVersion == 17085)
     {
         Win8pInstallHook2(
-            Symbols.KeWaitForSingleObject + 0x1c4, 
+            Symbols.KeWaitForSingleObject + 0x1c4,
             reinterpret_cast<ULONG_PTR>(AsmKeWaitForSingleObject_17041));
     }
 
+    ExclReleaseExclusivity(exclusivity);
     return STATUS_SUCCESS;
 }
 

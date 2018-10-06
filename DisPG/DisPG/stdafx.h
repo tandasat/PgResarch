@@ -16,16 +16,10 @@ extern "C" {
 #include <ntddstor.h>
 #include <mountdev.h>
 #include <ntddvol.h>
+#include <intrin.h>
 #pragma warning(pop)
 #pragma warning(disable:4100)
 }
-
-#ifndef _HAS_EXCEPTIONS
-#define _HAS_EXCEPTIONS     0
-#endif
-#include "../../Common/unique_resource.h"
-#include "../../Common/scope_guard.h"
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

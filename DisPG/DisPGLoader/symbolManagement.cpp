@@ -149,7 +149,7 @@ DriverInfoList GetDriverList()
         {
             ThrowRuntimeError(TEXT("GetDeviceDriverBaseName failed."));
         }
-        std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+        std::transform(name.begin(), name.end(), name.begin(), _totlower);
         list.emplace_back(
             reinterpret_cast<std::uintptr_t>(baseAddresses.at(i)),
             name.data());

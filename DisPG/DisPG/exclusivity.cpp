@@ -73,7 +73,7 @@ static volatile LONG g_ExclpNumberOfLockedProcessors = 0;
 _Use_decl_annotations_ EXTERN_C
 void *ExclGainExclusivity()
 {
-    NT_ASSERT(_InterlockedAdd(&g_ExclpNumberOfLockedProcessors, 0) == 0);
+    NT_ASSERT(InterlockedAdd(&g_ExclpNumberOfLockedProcessors, 0) == 0);
     _InterlockedAnd(&g_ExclpReleaseAllProcessors, 0);
 
     const auto numberOfProcessors = KeQueryActiveProcessorCount(nullptr);

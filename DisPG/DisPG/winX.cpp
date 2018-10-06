@@ -194,8 +194,7 @@ NTSTATUS WinXDisablePatchGuard(
 
     g_WinXSymbols = Symbols;
 
-    auto exclusivity = std::experimental::unique_resource(
-        ExclGainExclusivity(), ExclReleaseExclusivity);
+    auto exclusivity = ExclGainExclusivity();
     if (!exclusivity)
     {
         return STATUS_UNSUCCESSFUL;
@@ -243,6 +242,7 @@ NTSTATUS WinXDisablePatchGuard(
         }
     }
 
+    ExclReleaseExclusivity(exclusivity);
     return status;
 }
 
